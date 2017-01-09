@@ -14,7 +14,7 @@ describe Oystercard do
   describe '#top_up' do
     it { is_expected.to respond_to(:top_up).with(1).argument }
 
-    #maybe do a before block to top up the card to its limit 
+    #maybe do a before block to top up the card to its limit
     it 'tops up the balance with given amount' do
       expect{ oystercard.top_up 33 }.to change{ subject.balance }.by 33
     end
@@ -40,8 +40,14 @@ describe Oystercard do
     it { is_expected.to respond_to(:touch_in)}
 
     it 'changes the card status to in journey' do
+      oystercard.top_up(Oystercard::MIN_FARE)
       oystercard.touch_in
       expect(oystercard).to be_in_journey
+    end
+
+    it 'raises an error unless balance is at least minimum fare' do
+      message = "Insufficient funds. Please top up to a minimum of £#{Oystercard::MIN_FARE}."
+      expect { oystercard.touch_in }.to raise_error message
     end
 
   end
@@ -58,11 +64,13 @@ describe Oystercard do
 
   describe '#in_journey?' do
     it 'returns true after touch in' do
+      oystercard.top_up(Oystercard::MIN_FARE)
       oystercard.touch_in
       expect(oystercard.in_journey?).to eq true
     end
 
     it 'returns false after touch out' do
+      oystercard.top_up(Oystercard::MIN_FARE)
       oystercard.touch_in
       oystercard.touch_out
       expect(oystercard.in_journey?).to eq false
