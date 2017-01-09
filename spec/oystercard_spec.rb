@@ -1,7 +1,8 @@
 require 'oystercard'
 
 describe Oystercard do
-  subject(:oystercard) {described_class.new }
+  subject(:oystercard) { described_class.new }
+  let(:station) { double :station }
 
   it 'newly initialized cards have a balance of 0' do
     expect(oystercard.balance).to eq 0
@@ -28,17 +29,25 @@ describe Oystercard do
   end
 
   describe '#touch_in' do
-    it { is_expected.to respond_to(:touch_in)}
-
-    it 'changes the card status to in journey' do
-      oystercard.top_up(Oystercard::MIN_FARE)
-      oystercard.touch_in
-      expect(oystercard).to be_in_journey
-    end
+    it { is_expected.to respond_to(:touch_in).with(1).argument}
 
     it 'raises an error unless balance is at least minimum fare' do
       message = "Insufficient funds. Please top up to a minimum of £#{Oystercard::MIN_FARE}."
-      expect { oystercard.touch_in }.to raise_error message
+      expect { oystercard.touch_in(station) }.to raise_error message
+    end
+
+    # DRY the 2 tests below
+
+    it 'changes the card status to in journey' do
+      oystercard.top_up(Oystercard::MIN_FARE)
+      oystercard.touch_in(station)
+      expect(oystercard).to be_in_journey
+    end
+
+    it 'remembers the entry station' do
+      oystercard.top_up(Oystercard::MIN_FARE)
+      oystercard.touch_in(station)
+      expect(oystercard.entry_station).to eq station
     end
 
   end
@@ -53,8 +62,15 @@ describe Oystercard do
 
     it 'deducts minimum fare on touch out' do
       oystercard.top_up(Oystercard::MIN_FARE)
-      oystercard.touch_in
+      oystercard.touch_in(station)
       expect {oystercard.touch_out}.to change {oystercard.balance}.by(-Oystercard::MIN_FARE)
+    end
+
+    it 'clears the entry station upon exit' do
+      oystercard.top_up(Oystercard::MIN_FARE)
+      oystercard.touch_in(station)
+      oystercard.touch_out
+      expect(oystercard.entry_station).to eq nil
     end
 
   end
@@ -62,9 +78,8 @@ describe Oystercard do
   describe '#in_journey?' do
     before do
       oystercard.top_up(Oystercard::MIN_FARE)
-      oystercard.touch_in
+      oystercard.touch_in(station)
     end
-
 
     it 'returns true after touch in' do
       expect(oystercard.in_journey?).to eq true
