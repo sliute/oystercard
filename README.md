@@ -7,7 +7,7 @@ Version 1/5. See [version 2/5](https://github.com/rossbenzie/oystercard), [versi
 ## How to Use
 ```
 $ git clone https://github.com/sliute/oystercard.git
-$ cd 
+$ cd oystercard
 $ rspec
 $ irb
 ```
